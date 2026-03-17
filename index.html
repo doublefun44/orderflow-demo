@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrderFlow — Procurement OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef5e0;--surface:#f7fbee;--surface2:#e4efcc;--surface3:#d4e8b0;
+  --border:rgba(100,140,80,0.18);--border2:rgba(100,140,80,0.28);
+  --text:#2a3d1f;--text2:#4a6535;--text3:#7a9a60;
+  --accent:#4a7c3f;--accent-dim:rgba(74,124,63,0.12);
+  --green:#3a8a3a;--green-dim:rgba(58,138,58,0.13);
+  --amber:#8a7020;--amber-dim:rgba(138,112,32,0.13);
+  --red:#a03030;--red-dim:rgba(160,48,48,0.12);
+  --purple:#6a5a9a;--purple-dim:rgba(106,90,154,0.12);
+  --teal:#2a8a6a;--teal-dim:rgba(42,138,106,0.11);
+  --coral:#84b179;--coral-dim:rgba(132,177,121,0.18);
+  --brand:#84b179;--brand-light:#b8d9a8;--brand-lighter:#d4ecbf;--brand-lightest:#eef8d8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+.app{display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{width:230px;flex-shrink:0;background:#4a6e40;border-right:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-logo{padding:24px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sb-logo-name{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:#f0f7e8;display:flex;align-items:center;gap:8px}
+.sb-logo-dot{width:8px;height:8px;border-radius:50%;background:#c8e8a0}
+.sb-logo-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.45);margin-top:3px;letter-spacing:.5px}
+.nav{padding:14px 10px;flex:1}
+.nav-sec{margin-bottom:20px}
+.nav-sec-label{font-size:9px;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.4);letter-spacing:1.5px;padding:0 10px;margin-bottom:6px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;color:rgba(255,255,255,0.65);font-size:13px;transition:all .15s;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,0.1);color:#f0f7e8}
+.nav-item.active{background:rgba(255,255,255,0.18);color:#f0f7e8}
+.nav-item.warn{color:var(--text2)}
+.nav-item.danger{color:var(--text2)}
+.nav-badge{margin-left:auto;font-size:10px;font-family:'IBM Plex Mono',monospace;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);padding:2px 6px;border-radius:20px}
+.nav-item.active .nav-badge{background:rgba(255,255,255,0.25);color:#f0f7e8}
+.nav-item.warn .nav-badge{background:rgba(180,140,20,0.2);color:#c8a030}
+.nav-item.danger .nav-badge{background:rgba(180,60,60,0.2);color:#d06060}
+.sb-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.1);font-size:10px;color:rgba(255,255,255,0.3);font-family:'IBM Plex Mono',monospace}
+.workflow-divider{margin:0 10px 8px;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px}
+.wf-steps{display:flex;flex-direction:column;gap:1px}
+.wf-step{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;cursor:pointer;transition:background .15s}
+.wf-step:hover{background:rgba(255,255,255,0.08)}
+.wf-step.wf-active{background:rgba(200,240,160,0.15)}
+.wf-step-num{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-family:'IBM Plex Mono',monospace;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wf-step.wf-done .wf-step-num{background:#84b179;color:#fff}
+.wf-step.wf-active .wf-step-num{background:#c8f0a0;color:#2a4020}
+.wf-step-name{font-size:11px;color:rgba(255,255,255,0.5)}
+.wf-step.wf-active .wf-step-name{color:#e8f8d0}
+.wf-step.wf-done .wf-step-name{color:rgba(255,255,255,0.35);text-decoration:line-through;opacity:.7}
+.po-chip{margin:0 10px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:10px 12px;font-size:11px}
+.po-chip-po{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:#c8f0a0;margin-bottom:3px}
+.po-chip-name{color:rgba(255,255,255,0.75);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.po-chip-meta{color:rgba(255,255,255,0.4);font-family:'IBM Plex Mono',monospace;font-size:10px}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{background:#f0f8e4;border-bottom:1px solid rgba(132,177,121,0.3);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:14px;position:sticky;top:0;z-index:20}
+.topbar-left{display:flex;flex-direction:column}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--text)}
+.topbar-sub{font-size:11px;color:var(--text3);margin-top:1px;font-family:'IBM Plex Mono',monospace}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* Buttons */
+.btn{font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 16px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--surface2);color:var(--text)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#3a7de8}
+.btn-coral{background:#5a8f50;border-color:#5a8f50;color:#fff}
+.btn-coral:hover{background:#4a7a40}
+.btn-ghost{border-color:transparent;color:var(--text3)}
+.btn-ghost:hover{color:var(--text2)}
+.btn-sm{padding:5px 11px;font-size:11px}
+
+/* Inputs */
+select,input[type="text"],input[type="date"],input[type="number"],textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:'IBM Plex Sans',sans-serif;padding:7px 10px;outline:none;transition:border-color .15s;cursor:pointer}
+select,input[type="text"]{height:32px}
+input[type="date"],input[type="number"]{height:32px}
+select:focus,input:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:64px;width:100%}
+
+/* ── Page views ── */
+.page{display:none;padding:24px 28px;flex:1;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── KPI grid ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:24px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:transparent;transition:background .15s}
+.kpi:hover{border-color:var(--border2)}
+.kpi.active{border-color:var(--accent)}
+.kpi.active::before{background:var(--accent)}
+.kpi.warn{} .kpi.warn.active{border-color:var(--amber)} .kpi.warn.active::before{background:var(--amber)}
+.kpi.danger.active{border-color:var(--red)} .kpi.danger.active::before{background:var(--red)}
+.kpi-label{font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;line-height:1.4;margin-bottom:7px;text-transform:uppercase}
+.kpi-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:var(--text)}
+.kpi.warn .kpi-value{color:var(--amber)} .kpi.danger .kpi-value{color:var(--red)}
+
+/* ── Charts ── */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.chart-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.chart-sub{font-size:10px;color:var(--text3);margin-bottom:16px;font-family:'IBM Plex Mono',monospace}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-name{font-size:10px;color:var(--text2);width:55px;flex-shrink:0;font-family:'IBM Plex Mono',monospace}
+.bar-track{flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.bar-val{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;width:26px;text-align:right;flex-shrink:0}
+.donut-wrap{display:flex;align-items:center;gap:20px}
+.donut-legend{display:flex;flex-direction:column;gap:7px;flex:1}
+.legend-item{display:flex;align-items:center;gap:7px}
+.legend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.legend-name{font-size:11px;color:var(--text2);flex:1}
+.legend-pct{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3)}
+
+/* ── Table section ── */
+.table-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.table-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.table-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text)}
+.table-count{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text3)}
+.legend-row{display:flex;gap:12px}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3)}
+.leg-swatch{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+colgroup col:nth-child(1){width:72px} colgroup col:nth-child(2){width:80px} colgroup col:nth-child(3){width:105px} colgroup col:nth-child(4){width:60px} colgroup col:nth-child(5){width:85px} colgroup col:nth-child(6){width:85px} colgroup col:nth-child(7){width:90px} colgroup col:nth-child(8){width:100px} colgroup col:nth-child(9){width:70px} colgroup col:nth-child(10){width:95px}
+th{font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;color:var(--text3);padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;user-select:none;text-transform:uppercase}
+th:hover{color:var(--text2)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+tr.row-warn td{background:rgba(245,166,35,.06)}
+tr.row-warn:hover td{background:rgba(245,166,35,.12)}
+tr.row-danger td{background:rgba(245,83,83,.06)}
+tr.row-danger:hover td{background:rgba(245,83,83,.12)}
+tr.row-demo td{background:rgba(132,177,121,.15)}
+tr.row-demo:hover td{background:rgba(132,177,121,.25)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.badge-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b-delivered{background:var(--green-dim);color:var(--green)} .b-delivered .badge-dot{background:var(--green)}
+.b-complete{background:var(--green-dim);color:var(--green)} .b-complete .badge-dot{background:var(--green)}
+.b-shipped{background:var(--accent-dim);color:var(--accent)} .b-shipped .badge-dot{background:var(--accent)}
+.b-transit{background:var(--teal-dim);color:var(--teal)} .b-transit .badge-dot{background:var(--teal)}
+.b-processed{background:var(--amber-dim);color:var(--amber)} .b-processed .badge-dot{background:var(--amber)}
+.b-placed{background:var(--surface3);color:var(--text2)} .b-placed .badge-dot{background:var(--text2)}
+.b-received{background:var(--purple-dim);color:var(--purple)} .b-received .badge-dot{background:var(--purple)}
+
+/* GR */
+.gr-btn{font-size:11px;padding:4px 10px;border:1px solid rgba(62,207,142,.3);border-radius:6px;background:var(--green-dim);color:var(--green);cursor:pointer;white-space:nowrap;transition:all .15s}
+.gr-btn:hover{background:rgba(62,207,142,.22)}
+
+.incident-btn{font-size:11px;padding:4px 10px;border:1px solid rgba(245,166,35,.3);border-radius:6px;background:var(--amber-dim);color:var(--amber);cursor:pointer;white-space:nowrap;transition:all .15s;margin-left:5px}
+.incident-btn:hover{background:rgba(245,166,35,.2)}
+
+.gr-done-tag{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--green);display:inline-flex;align-items:center;gap:3px}
+.po-link{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.po-link:hover{color:#7aadff}
+.demo-po-link{color:#4a7a40;text-decoration:underline;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500}
+.demo-po-link:hover{color:#2a5020}
+.amt-cell{font-family:'IBM Plex Mono',monospace;font-size:11px}
+.track-cell{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3)}
+.no-rows{padding:32px;text-align:center;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:12px}
+.overdue-tag{font-size:9px;font-family:'IBM Plex Mono',monospace;padding:2px 5px;border-radius:3px;margin-left:3px}
+.overdue-3{background:var(--amber-dim);color:var(--amber)}
+.overdue-7{background:var(--red-dim);color:var(--red)}
+
+/* ── List view controls ── */
+.list-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+
+/* ── Workflow (WF) page ── */
+.wf-pipeline{display:flex;align-items:stretch;margin-bottom:28px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.pipe-step{flex:1;padding:11px 9px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--border);cursor:pointer;transition:background .15s}
+.pipe-step:last-child{border-right:none}
+.pipe-step:hover{background:var(--surface2)}
+.pipe-step.active{background:rgba(132,177,121,0.2)}
+.pipe-step.done{background:var(--green-dim)}
+.pipe-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)}
+.pipe-step.active .pipe-label{color:#4a7a40}
+.pipe-step.done .pipe-label{color:var(--green)}
+.pipe-status{font-size:10px;font-weight:500;color:var(--text2)}
+.pipe-step.active .pipe-status{color:#3a6830}
+.pipe-step.done .pipe-status{color:var(--green)}
+
+/* Stage panels */
+.stage-panel{display:none}
+.stage-panel.active{display:block;animation:fadeIn .2s ease}
+
+/* Form cards */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px}
+.form-card-head{padding:16px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:10px}
+.form-card-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
+.form-card-sub{font-size:11px;color:var(--text3)}
+.form-body{padding:20px 22px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}
+.form-full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)}
+.form-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* Info cards */
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:18px}
+.info-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.info-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
+.info-body{padding:18px 20px}
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 20px}
+.info-field{display:flex;flex-direction:column;gap:4px}
+.info-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
+.info-val{font-size:12px;color:var(--text);font-weight:500}
+.info-val.mono{font-family:'IBM Plex Mono',monospace;font-size:11px}
+.info-val.accent{color:var(--accent)}
+
+/* Status badge (wf) */
+.sb{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;padding:4px 10px;border-radius:4px}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sb-placed{background:var(--surface3);color:var(--text2);border:1px solid var(--border2)}
+.sb-processed{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.sb-shipped,.sb-transit{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(45,212,191,.25)}
+.sb-delivered{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+.sb-received{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,.25)}
+.sb-complete{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,.25)}
+
+/* Action boxes */
+.action-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.action-box.hi{border-color:#84b179;background:rgba(132,177,121,0.12)}
+.action-box.gr{border-color:var(--purple);background:var(--purple-dim)}
+.action-box.tk{border-color:var(--accent);background:var(--accent-dim)}
+.ab-title{font-size:13px;font-weight:500;margin-bottom:3px}
+.action-box.hi .ab-title{color:#3a6830}
+.action-box.gr .ab-title{color:var(--purple)}
+.action-box.tk .ab-title{color:var(--accent)}
+.ab-desc{font-size:11px;color:var(--text2)}
+.inline-fields{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.inline-field{display:flex;flex-direction:column;gap:5px}
+.inline-field label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)}
+.inline-field input,.inline-field select{width:auto;min-width:150px}
+
+/* Tracking link */
+.track-link{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);text-decoration:none;border-bottom:1px dashed var(--teal);padding-bottom:1px;cursor:pointer;transition:opacity .15s}
+.track-link:hover{opacity:.7}
+
+/* Task card */
+.task-card{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;margin-top:10px;width:100%}
+.task-pill{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.8px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--accent-dim);color:var(--accent);border:1px solid rgba(79,142,247,.2)}
+.task-title-text{font-size:12px;font-weight:500;color:var(--text)}
+.task-meta{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
+.task-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 16px;margin-top:10px}
+
+/* Timeline */
+.timeline{display:flex;flex-direction:column}
+.tl-item{display:flex;gap:16px;padding-bottom:22px}
+.tl-item:last-child{padding-bottom:0}
+.tl-left{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
+.tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;flex-shrink:0;border:1px solid var(--border2);background:var(--surface2);color:var(--text3);z-index:1}
+.tl-dot.done{background:var(--green);border-color:var(--green);color:#fff}
+.tl-dot.now{background:var(--coral);border-color:var(--coral);color:#fff}
+.tl-dot.next{background:var(--surface2);border-color:var(--border);color:var(--text3)}
+.tl-line{flex:1;width:1px;background:var(--border);margin-top:3px}
+.tl-line.done{background:rgba(62,207,142,.3)}
+.tl-right{flex:1;padding-top:4px}
+.tl-stage{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:3px}
+.tl-stage.done{color:var(--green)} .tl-stage.now{color:var(--coral)}
+.tl-title-text{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.tl-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.tl-date{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-top:5px}
+
+/* Invoice */
+.inv-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+.inv-row:last-child{border-bottom:none}
+.inv-total{font-weight:500;font-size:14px}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:#3a6030;color:#e8f8d0;padding:10px 22px;border-radius:6px;font-size:12px;font-weight:500;z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;border:1px solid rgba(132,177,121,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Demo banner */
+.demo-banner{background:rgba(132,177,121,.15);border:1px solid rgba(132,177,121,.35);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.demo-banner-text{font-size:12px;color:#3a6830}
+.demo-banner-po{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:#3a6830}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-name"><span class="sb-logo-dot"></span>OrderFlow</div>
+    <div class="sb-logo-tag">Procurement OS</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-sec">
+      <div class="nav-sec-label">Views</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="switchPage('dashboard')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" id="nav-list" onclick="switchPage('list')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        All orders
+        <span class="nav-badge" id="nb-all">0</span>
+      </div>
+      <div class="nav-item warn" id="nav-gr3" onclick="switchPage('list');setView('gr3')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        GR over 3 days
+        <span class="nav-badge" id="nb-gr3">0</span>
+      </div>
+      <div class="nav-item danger" id="nav-gr7" onclick="switchPage('list');setView('gr7')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        GR over 7 days
+        <span class="nav-badge" id="nb-gr7">0</span>
+      </div>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-sec-label">New order</div>
+      <div class="nav-item" id="nav-workflow" onclick="switchPage('workflow')" style="color:rgba(255,255,255,0.8)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Create PO workflow
+      </div>
+    </div>
+    <div id="wf-sidebar-section" style="display:none">
+      <div class="workflow-divider">
+        <div class="nav-sec-label" style="padding:0;margin-bottom:6px">Workflow stages</div>
+      </div>
+      <div id="po-chip-wrap"></div>
+      <div class="wf-steps" id="wf-steps-nav"></div>
+    </div>
+  </nav>
+  <div class="sb-footer">v1.0 · March 2026<br><span style="color:rgba(255,255,255,0.2)">Built by Fangfang Wang</span></div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topbar-title">Dashboard overview</div>
+      <div class="topbar-sub" id="topbar-sub">All locations · All time</div>
+    </div>
+    <div class="topbar-right" id="topbar-right">
+      <!-- dashboard controls injected here -->
+    </div>
+  </div>
+
+  <!-- ════ DASHBOARD PAGE ════ -->
+  <div class="page active" id="page-dashboard">
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Orders by location</div>
+        <div class="chart-sub">Total amount per DC</div>
+        <div id="barChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Status breakdown</div>
+        <div class="chart-sub">Current distribution</div>
+        <div class="donut-wrap"><canvas id="donutCanvas" width="100" height="100"></canvas><div class="donut-legend" id="donutLegend"></div></div>
+      </div>
+    </div>
+    <div class="table-section">
+      <div class="table-header">
+        <div><div class="table-title" id="dashTableTitle">All orders</div><div class="table-count" id="dashTableCount"></div></div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="legend-row"><span class="leg"><span class="leg-swatch" style="background:var(--amber)"></span>GR over 3d</span><span class="leg"><span class="leg-swatch" style="background:var(--red)"></span>GR over 7d</span><span class="leg"><span class="leg-swatch" style="background:rgba(132,177,121,.7)"></span>Demo order</span></div>
+        </div>
+      </div>
+      <div class="table-wrap"><table id="dashTable">
+        <colgroup><col><col><col><col><col><col><col><col><col><col></colgroup>
+        <thead><tr><th>PO #</th><th>Location</th><th>Project</th><th>Curr.</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Tracking #</th><th>Vendor</th><th>GR action</th></tr></thead>
+        <tbody id="dashTbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ════ LIST PAGE ════ -->
+  <div class="page" id="page-list">
+    <div class="list-controls">
+      <input type="text" id="search2" placeholder="Search PO, project, vendor…" style="width:240px" oninput="renderListTable()">
+      <select id="statusFilter" onchange="renderListTable()">
+        <option value="">All statuses</option>
+        <option>complete</option><option>delivered</option><option>shipped</option>
+        <option>in transit</option><option>processed</option><option>order placed</option><option>received</option>
+      </select>
+    </div>
+    <div class="table-section">
+      <div class="table-header">
+        <div><div class="table-title" id="listTableTitle">All orders</div><div class="table-count" id="listTableCount"></div></div>
+        <div class="legend-row"><span class="leg"><span class="leg-swatch" style="background:var(--amber)"></span>GR over 3d</span><span class="leg"><span class="leg-swatch" style="background:var(--red)"></span>GR over 7d</span><span class="leg"><span class="leg-swatch" style="background:rgba(132,177,121,.7)"></span>Demo order</span></div>
+      </div>
+      <div class="table-wrap"><table id="listTable">
+        <colgroup><col><col><col><col><col><col><col><col><col><col></colgroup>
+        <thead><tr>
+          <th onclick="sortBy('po')">PO # ↕</th><th onclick="sortBy('loc')">Location ↕</th><th onclick="sortBy('proj')">Project ↕</th><th onclick="sortBy('cur')">Curr. ↕</th>
+          <th onclick="sortBy('amt')">Amount ↕</th><th onclick="sortBy('eta')">Due Date ↕</th><th onclick="sortBy('status')">Status ↕</th>
+          <th>Tracking #</th><th onclick="sortBy('vendor')">Vendor ↕</th><th>GR action</th>
+        </tr></thead>
+        <tbody id="listTbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ════ WORKFLOW PAGE ════ -->
+  <div class="page" id="page-workflow">
+    <div class="wf-pipeline" id="wf-pipeline">
+      <div class="pipe-step active" onclick="goStage(0)"><div class="pipe-label">Stage 1</div><div class="pipe-status">Order placed</div></div>
+      <div class="pipe-step" onclick="goStage(1)"><div class="pipe-label">Stage 2</div><div class="pipe-status">Processed</div></div>
+      <div class="pipe-step" onclick="goStage(2)"><div class="pipe-label">Stage 3</div><div class="pipe-status">Shipped</div></div>
+      <div class="pipe-step" onclick="goStage(3)"><div class="pipe-label">Stage 4</div><div class="pipe-status">In transit</div></div>
+      <div class="pipe-step" onclick="goStage(4)"><div class="pipe-label">Stage 5</div><div class="pipe-status">Delivered</div></div>
+      <div class="pipe-step" onclick="goStage(5)"><div class="pipe-label">Stage 6</div><div class="pipe-status">GR</div></div>
+      <div class="pipe-step" onclick="goStage(6)"><div class="pipe-label">Stage 7</div><div class="pipe-status">Complete</div></div>
+    </div>
+
+    <!-- Stage 0: Create PO -->
+    <div class="stage-panel active" id="stage-0">
+      <div class="form-card">
+        <div class="form-card-head"><div class="form-card-title">New Purchase Order</div><div class="form-card-sub">ETA is the requester's requested delivery date</div></div>
+        <div class="form-body"><div class="form-grid">
+          <div class="field"><label>Project name</label><input type="text" id="f-project" value="DC Core Network Upgrade"></div>
+          <div class="field"><label>Location</label><select id="f-location"><option>DC_BFI</option><option>DC_AUS</option><option selected>DC_ORD</option><option>DC_AMS</option><option>DC_CWL</option><option>DC_LHR</option><option>DC_HND</option><option>DC_KIX</option></select></div>
+          <div class="field"><label>Vendor</label><select id="f-vendor"><option>vendor 1</option><option>vendor 2</option><option selected>vendor 3</option><option>vendor 4</option><option>vendor 5</option><option>vendor 6</option><option>vendor 7</option><option>vendor 8</option></select></div>
+          <div class="field"><label>Currency</label><select id="f-currency"><option selected>USD</option><option>EUR</option><option>JPY</option></select></div>
+          <div class="field"><label>Order amount</label><input type="number" id="f-amount" value="48500"></div>
+          <div class="field"><label>Requested due date</label><input type="date" id="f-eta" value="2026-04-15"></div>
+          <div class="field form-full"><label>Description / items</label><textarea id="f-desc">48-port managed switches × 4, SFP+ transceivers × 48, patch cables × 200</textarea></div>
+        </div></div>
+        <div class="form-footer"><button class="btn btn-coral" onclick="placePO()">Issue Purchase Order →</button></div>
+      </div>
+      <div class="info-card"><div class="info-head"><div class="info-title">What happens</div></div><div class="info-body"><div class="timeline">
+        <div class="tl-item"><div class="tl-left"><div class="tl-dot now">1</div><div class="tl-line"></div></div><div class="tl-right"><div class="tl-stage now">Now</div><div class="tl-title-text">PO issued — status: order placed</div><div class="tl-desc">Due date is the requester's requested delivery date. Order appears in the dashboard immediately.</div></div></div>
+        <div class="tl-item"><div class="tl-left"><div class="tl-dot next">→</div></div><div class="tl-right"><div class="tl-stage">Next</div><div class="tl-title-text">PO sent to vendor for acceptance</div><div class="tl-desc">Vendor reviews and confirms with their delivery date.</div></div></div>
+      </div></div></div>
+    </div>
+
+    <!-- Stage 1: Vendor accepts -->
+    <div class="stage-panel" id="stage-1">
+      <div id="pos-1" class="info-card"></div>
+      <div class="action-box hi">
+        <div><div class="ab-title">Vendor response received</div><div class="ab-desc">Enter vendor's confirmed date → status: <strong>processed</strong></div></div>
+        <div class="inline-fields">
+          <div class="inline-field"><label>Vendor confirmed due date</label><input type="date" id="vendor-eta" value="2026-04-20"></div>
+          <button class="btn btn-coral" onclick="acceptPO()">Confirm →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 2: Shipped -->
+    <div class="stage-panel" id="stage-2">
+      <div id="pos-2" class="info-card"></div>
+      <div class="action-box hi">
+        <div><div class="ab-title">Goods handed to carrier → status: shipped / in transit</div><div class="ab-desc">Enter tracking number and carrier ETA. Tracking link goes live immediately.</div></div>
+        <div class="inline-fields">
+          <div class="inline-field"><label>Carrier</label><select id="carrier-name" style="min-width:100px"><option value="ups">UPS</option><option value="fedex" selected>FedEx</option><option value="dhl">DHL</option><option value="usps">USPS</option></select></div>
+          <div class="inline-field"><label>Tracking number</label><input type="text" id="tracking-num" value="774502318657"></div>
+          <div class="inline-field"><label>Carrier due date</label><input type="date" id="carrier-eta" value="2026-04-22"></div>
+          <button class="btn btn-coral" onclick="shipOrder()">Mark shipped →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 3: In transit -->
+    <div class="stage-panel" id="stage-3">
+      <div id="pos-3" class="info-card"></div>
+      <div class="info-card">
+        <div class="info-head"><div class="info-title">Live carrier tracking</div><span class="sb sb-transit"><span class="sb-dot"></span>in transit</span></div>
+        <div class="info-body" style="display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+          <div class="info-field"><div class="info-lbl">Tracking number</div>
+            <a id="track-link-display" class="track-link" href="#" target="_blank">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span id="track-num-display">—</span>
+            </a>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px">Opens carrier tracking website</div>
+          </div>
+          <div class="info-field"><div class="info-lbl">Carrier</div><div class="info-val" id="carrier-display-name">—</div></div>
+          <div class="info-field"><div class="info-lbl">Due date</div><div class="info-val mono" id="transit-due-display">—</div></div>
+        </div>
+      </div>
+      <div class="action-box tk" style="flex-direction:column;align-items:flex-start;gap:12px">
+        <div><div class="ab-title">Inbound coordination ticket created</div><div class="ab-desc">Auto-generated ticket to coordinate site receiving with the carrier.</div></div>
+        <div id="inbound-ticket-wrap" style="width:100%"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" onclick="shareTicket()">Share with carrier</button>
+          <button class="btn btn-sm" onclick="copyTicket()">Copy reference</button>
+        </div>
+      </div>
+      <div class="action-box hi">
+        <div><div class="ab-title">Carrier confirms delivery</div><div class="ab-desc">Enter actual delivery date → status: <strong>delivered</strong>. Good Receipt task created.</div></div>
+        <div class="inline-fields">
+          <div class="inline-field"><label>Actual delivery date</label><input type="date" id="delivery-date" value="2026-04-23"></div>
+          <button class="btn btn-coral" onclick="deliverOrder()">Confirm delivery →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 4: Delivered -->
+    <div class="stage-panel" id="stage-4">
+      <div id="pos-4" class="info-card"></div>
+      <div class="action-box gr">
+        <div><div class="ab-title">Good Receipt task created</div><div class="ab-desc">Site team notified. Proceed to verify items received.</div></div>
+        <button class="btn btn-coral" onclick="goStage(5)">Go to Good Receipt →</button>
+      </div>
+    </div>
+
+    <!-- Stage 5: Good Receipt -->
+    <div class="stage-panel" id="stage-5">
+      <div id="pos-5" class="info-card"></div>
+      <div class="form-card">
+        <div class="form-card-head"><div class="form-card-title">Good Receipt checklist</div><div class="form-card-sub">Verify all items match the PO before completing</div></div>
+        <div class="form-body">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label style="display:flex;align-items:center;gap:9px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--text)"><input type="checkbox" id="gr1"> Items match PO description</label>
+            <label style="display:flex;align-items:center;gap:9px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--text)"><input type="checkbox" id="gr2"> Quantities verified</label>
+            <label style="display:flex;align-items:center;gap:9px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--text)"><input type="checkbox" id="gr3c"> No damage or missing items</label>
+            <label style="display:flex;align-items:center;gap:9px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--text)"><input type="checkbox" id="gr4"> Serial numbers recorded</label>
+          </div>
+          <div style="margin-top:16px"><div class="field"><label>Receipt date</label><input type="date" id="receipt-date" value="2026-04-25" style="max-width:180px"></div></div>
+          <div style="margin-top:12px"><div class="field"><label>Notes (optional)</label><textarea id="gr-notes" placeholder="Remarks…"></textarea></div></div>
+        </div>
+        <div class="form-footer" style="justify-content:space-between;align-items:center"><button class="btn" style="border-color:var(--amber);color:var(--amber);background:var(--amber-dim)" onclick="void(0)">⚠ Create incident</button><button class="btn btn-coral" onclick="completeGR()">Complete Good Receipt →</button></div>
+      </div>
+    </div>
+
+    <!-- Stage 6: Invoice -->
+    <div class="stage-panel" id="stage-6">
+      <div id="pos-6" class="info-card"></div>
+      <div class="info-card" style="margin-bottom:18px">
+        <div class="info-head"><div class="info-title">Invoice for payment</div><span class="sb sb-received"><span class="sb-dot"></span>Invoice pending</span></div>
+        <div class="info-body"><div style="max-width:440px">
+          <div class="inv-row"><span style="color:var(--text2)">Description</span><span id="inv-desc" style="max-width:260px;text-align:right;font-size:11px"></span></div>
+          <div class="inv-row"><span style="color:var(--text2)">PO number</span><span class="info-val mono" id="inv-po"></span></div>
+          <div class="inv-row"><span style="color:var(--text2)">Vendor</span><span id="inv-vendor"></span></div>
+          <div class="inv-row"><span style="color:var(--text2)">Receipt date</span><span id="inv-receipt" style="font-family:'IBM Plex Mono',monospace;font-size:11px"></span></div>
+          <div class="inv-row" style="margin-top:6px;padding-top:12px;border-top:2px solid var(--border)"><span class="inv-total">Total due</span><span class="inv-total info-val accent" id="inv-total"></span></div>
+        </div></div>
+      </div>
+      <div class="action-box hi">
+        <div><div class="ab-title">Approve invoice payment</div><div class="ab-desc">Finance matched invoice against PO and GR. Approve to close.</div></div>
+        <button class="btn btn-coral" onclick="payInvoice()">Approve & close order →</button>
+      </div>
+    </div>
+
+    <!-- Stage 7: Complete -->
+    <div class="stage-panel" id="stage-7">
+      <div id="pos-7" class="info-card"></div>
+      <div class="info-card">
+        <div class="info-head"><div class="info-title">Full order timeline</div><span class="sb sb-complete"><span class="sb-dot"></span>complete</span></div>
+        <div class="info-body" id="final-timeline"></div>
+      </div>
+      <div style="margin-top:20px;text-align:center">
+        <button class="btn btn-primary" onclick="switchPage('dashboard')">View in dashboard →</button>
+        <button class="btn btn-ghost" onclick="resetDemo()" style="margin-left:8px">↺ New order demo</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border-top:1px solid var(--border);padding:8px 28px;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.5px">OrderFlow · Built by <span style="color:var(--text2)">Fangfang Wang</span> · Mar 2026</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3)">Procurement OS · v1.0</span>
+  </div>
+</div><!-- /main -->
+</div><!-- /app -->
+<div class="toast" id="toast"></div>
+
+<script>
+const TODAY = new Date('2026-03-13');
+
+// ── Shared order state ──
+let wfOrder = null;
+let currentStage = 0;
+let ticketRef = '';
+
+// ── Dashboard state ──
+const grDone = new Set();
+let activeView = 'all';
+let currentPage = 'dashboard';
+let sortKey = null, sortDir = 1;
+
+const CARRIER_URLS = {ups:'https://www.ups.com/track?tracknum=',fedex:'https://www.fedex.com/fedextrack/?trknbr=',dhl:'https://www.dhl.com/en/express/tracking.html?AWB=',usps:'https://tools.usps.com/go/TrackConfirmAction?tLabels='};
+
+// ── Base orders ──
+const BASE_ORDERS = [
+  {po:2531,loc:'DC_BFI',proj:'project A',cur:'USD',amt:2541,eta:'5/10/2026',status:'processed',track:'',vendor:'vendor 1'},
+  {po:1581,loc:'DC_AUS',proj:'project B',cur:'USD',amt:2664,eta:'3/5/2026',status:'delivered',track:'2345',vendor:'vendor 2'},
+  {po:5684,loc:'DC_AUS',proj:'project C',cur:'USD',amt:2612,eta:'2/3/2026',status:'received',track:'5942163',vendor:'vendor 3'},
+  {po:2158,loc:'DC_ORD',proj:'Project 1',cur:'USD',amt:5884,eta:'9/8/2026',status:'processed',track:'',vendor:'vendor 4'},
+  {po:1568,loc:'DC_AMS',proj:'Project 2',cur:'EUR',amt:569456,eta:'5/6/2026',status:'shipped',track:'65156',vendor:'vendor 5'},
+  {po:1668,loc:'DC_AMS',proj:'Project 3',cur:'EUR',amt:26964,eta:'4/25/2026',status:'shipped',track:'2611',vendor:'vendor 6'},
+  {po:1569,loc:'DC_CWL',proj:'Project 4',cur:'EUR',amt:264,eta:'4/13/2026',status:'shipped',track:'26200',vendor:'vendor 7'},
+  {po:2056,loc:'DC_LHR',proj:'Project 5',cur:'EUR',amt:3652,eta:'5/16/2026',status:'shipped',track:'49412665236',vendor:'vendor 8'},
+  {po:2646,loc:'DC_CWL',proj:'Project 6',cur:'EUR',amt:2694,eta:'5/1/2026',status:'in transit',track:'23651',vendor:'vendor 3'},
+  {po:5482,loc:'DC_BFI',proj:'Project 7',cur:'USD',amt:63652,eta:'6/4/2026',status:'order placed',track:'',vendor:'vendor 4'},
+  {po:4894,loc:'DC_AUS',proj:'Project 8',cur:'USD',amt:269645,eta:'2/15/2026',status:'complete',track:'251541',vendor:'vendor 5'},
+  {po:7895,loc:'DC_AUS',proj:'Project 9',cur:'USD',amt:2652,eta:'5/8/2026',status:'in transit',track:'10561',vendor:'vendor 5'},
+  {po:4997,loc:'DC_ORD',proj:'Project 10',cur:'USD',amt:2650,eta:'7/5/2026',status:'order placed',track:'',vendor:'vendor 6'},
+  {po:7895,loc:'DC_AMS',proj:'Project 11',cur:'EUR',amt:2641,eta:'6/18/2026',status:'order placed',track:'',vendor:'vendor 7'},
+  {po:5997,loc:'DC_AMS',proj:'Project 12',cur:'EUR',amt:2642,eta:'5/20/2026',status:'in transit',track:'251',vendor:'vendor 8'},
+  {po:5697,loc:'DC_CWL',proj:'Project 13',cur:'EUR',amt:2641,eta:'4/30/2026',status:'in transit',track:'1265541',vendor:'vendor 3'},
+  {po:6994,loc:'DC_LHR',proj:'Project 14',cur:'EUR',amt:26469,eta:'5/6/2026',status:'in transit',track:'23510',vendor:'vendor 2'},
+  {po:4883,loc:'DC_CWL',proj:'Project 15',cur:'EUR',amt:2664,eta:'6/18/2026',status:'order placed',track:'',vendor:'vendor 3'},
+  {po:7892,loc:'DC_HND',proj:'Project 16',cur:'JPY',amt:2542,eta:'7/6/2026',status:'order placed',track:'',vendor:'vendor 6'},
+  {po:9942,loc:'DC_KIX',proj:'Project 17',cur:'JPY',amt:2661,eta:'1/15/2026',status:'complete',track:'5136',vendor:'vendor 7'},
+  {po:3301,loc:'DC_BFI',proj:'Alpha Fit-out',cur:'USD',amt:14800,eta:'3/12/2026',status:'delivered',track:'881200',vendor:'vendor 1'},
+  {po:3302,loc:'DC_AUS',proj:'Beta Cabling',cur:'USD',amt:7320,eta:'3/10/2026',status:'delivered',track:'882301',vendor:'vendor 3'},
+  {po:3303,loc:'DC_ORD',proj:'Gamma Rack',cur:'USD',amt:31500,eta:'3/8/2026',status:'delivered',track:'883412',vendor:'vendor 4'},
+  {po:3304,loc:'DC_AMS',proj:'Delta UPS',cur:'EUR',amt:48200,eta:'3/5/2026',status:'delivered',track:'884523',vendor:'vendor 5'},
+  {po:3305,loc:'DC_CWL',proj:'Epsilon PDU',cur:'EUR',amt:9100,eta:'3/3/2026',status:'delivered',track:'885634',vendor:'vendor 6'},
+  {po:3306,loc:'DC_LHR',proj:'Zeta Switch',cur:'EUR',amt:22750,eta:'2/27/2026',status:'delivered',track:'886745',vendor:'vendor 7'},
+  {po:3307,loc:'DC_HND',proj:'Eta Server',cur:'JPY',amt:185000,eta:'2/20/2026',status:'delivered',track:'887856',vendor:'vendor 8'},
+  {po:3308,loc:'DC_KIX',proj:'Theta SAN',cur:'JPY',amt:62000,eta:'3/11/2026',status:'delivered',track:'888967',vendor:'vendor 2'},
+  {po:3309,loc:'DC_BFI',proj:'Iota Cooling',cur:'USD',amt:18400,eta:'3/6/2026',status:'delivered',track:'889078',vendor:'vendor 1'},
+  {po:3310,loc:'DC_AUS',proj:'Kappa Fiber',cur:'USD',amt:5600,eta:'3/13/2026',status:'delivered',track:'890189',vendor:'vendor 3'},
+  {po:3311,loc:'DC_ORD',proj:'Lambda KVM',cur:'USD',amt:3900,eta:'3/9/2026',status:'delivered',track:'891200',vendor:'vendor 4'},
+  {po:3312,loc:'DC_AMS',proj:'Mu Firewall',cur:'EUR',amt:71000,eta:'2/24/2026',status:'delivered',track:'892311',vendor:'vendor 5'},
+  {po:3313,loc:'DC_CWL',proj:'Nu Backup',cur:'EUR',amt:14200,eta:'3/4/2026',status:'delivered',track:'893422',vendor:'vendor 6'},
+  {po:3314,loc:'DC_LHR',proj:'Xi Load Bal.',cur:'EUR',amt:38900,eta:'3/1/2026',status:'received',track:'894533',vendor:'vendor 7'},
+  {po:3315,loc:'DC_BFI',proj:'Omicron NAS',cur:'USD',amt:27300,eta:'4/10/2026',status:'order placed',track:'',vendor:'vendor 2'},
+  {po:3316,loc:'DC_AUS',proj:'Pi Generator',cur:'USD',amt:94000,eta:'3/28/2026',status:'shipped',track:'896755',vendor:'vendor 8'},
+  {po:3317,loc:'DC_ORD',proj:'Rho Chiller',cur:'USD',amt:52100,eta:'4/5/2026',status:'in transit',track:'897866',vendor:'vendor 1'},
+  {po:3318,loc:'DC_AMS',proj:'Sigma Patch',cur:'EUR',amt:4300,eta:'4/20/2026',status:'order placed',track:'',vendor:'vendor 3'},
+  {po:3319,loc:'DC_CWL',proj:'Tau Raceway',cur:'EUR',amt:8750,eta:'2/10/2026',status:'complete',track:'',vendor:'vendor 4'},
+  {po:3320,loc:'DC_LHR',proj:'Upsilon Tile',cur:'EUR',amt:16600,eta:'3/25/2026',status:'in transit',track:'900199',vendor:'vendor 5'},
+  {po:3401,loc:'DC_BFI',proj:'Phi Conduit',cur:'USD',amt:11200,eta:'3/12/2026',status:'delivered',track:'901100',vendor:'vendor 2'},
+  {po:3402,loc:'DC_AUS',proj:'Chi Cabinet',cur:'USD',amt:8450,eta:'3/11/2026',status:'delivered',track:'902211',vendor:'vendor 4'},
+  {po:3403,loc:'DC_ORD',proj:'Psi Cabling',cur:'USD',amt:19700,eta:'3/13/2026',status:'delivered',track:'903322',vendor:'vendor 6'},
+  {po:3404,loc:'DC_AMS',proj:'Omega Panel',cur:'EUR',amt:34600,eta:'3/12/2026',status:'delivered',track:'904433',vendor:'vendor 8'},
+  {po:3405,loc:'DC_CWL',proj:'Alpha-2 Bus',cur:'EUR',amt:6800,eta:'3/11/2026',status:'delivered',track:'905544',vendor:'vendor 1'},
+];
+
+function getORDERS(){
+  const list = [...BASE_ORDERS];
+  if(wfOrder && wfOrder.po){
+    const idx = list.findIndex(o=>o.po===wfOrder.po);
+    const rec = {po:wfOrder.po,loc:wfOrder.location,proj:wfOrder.project,cur:wfOrder.currency,amt:wfOrder.amount,eta:wfOrder.eta,status:wfOrder.status,track:wfOrder.tracking||'',vendor:wfOrder.vendor,_demo:true};
+    if(idx>=0) list[idx]=rec; else list.unshift(rec);
+  }
+  return list;
+}
+
+// ── Helpers ──
+function fmtDate(d){ if(!d) return '—'; try{ return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }catch(e){ return d; } }
+function fmtAmt(o){ return (o.cur==='USD'?'$':o.cur==='EUR'?'€':'¥')+(parseFloat(o.amt||o.amount)||0).toLocaleString(); }
+function genPO(){ return Math.floor(4000+Math.random()*5000); }
+function genTicket(){ return 'IBD-'+Math.floor(10000+Math.random()*90000); }
+function daysSince(etaStr){ return Math.floor((TODAY - new Date(etaStr))/86400000); }
+function isPendingGR(o){ return o.status==='delivered' && !grDone.has(o.po); }
+function rowHL(o){ if(o._demo) return 'row-demo'; if(!isPendingGR(o)) return ''; const d=daysSince(o.eta); return d>=7?'row-danger':d>=3?'row-warn':''; }
+function badgeCls(s){ return {delivered:'b-delivered',shipped:'b-shipped','in transit':'b-transit',processed:'b-processed','order placed':'b-placed',complete:'b-complete',received:'b-received'}[s]||'b-placed'; }
+function badge(s){ return `<span class="badge ${badgeCls(s)}"><span class="badge-dot"></span>${s}</span>`; }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+
+// ── Dashboard filters ──
+function filteredOrders(){
+  const loc=document.getElementById('locFilter')?document.getElementById('locFilter').value:'';
+  const days=parseInt(document.getElementById('timeFilter')?document.getElementById('timeFilter').value:'')||0;
+  return getORDERS().filter(o=>{
+    if(loc&&o.loc!==loc) return false;
+    if(days){ const diff=(new Date(o.eta)-TODAY)/86400000; if(diff<0||diff>days) return false; }
+    return true;
+  });
+}
+
+function computeStats(orders){
+  const pending=orders.filter(o=>isPendingGR(o));
+  return {
+    all:orders.length,
+    placed:orders.filter(o=>o.status==='order placed').length,
+    transit:orders.filter(o=>['in transit','shipped'].includes(o.status)).length,
+    delivered:orders.filter(o=>o.status==='delivered').length,
+    gred:orders.filter(o=>o.status==='received'||grDone.has(o.po)).length,
+    gr3:pending.filter(o=>daysSince(o.eta)>=3).length,
+    gr7:pending.filter(o=>daysSince(o.eta)>=7).length,
+  };
+}
+
+const kpiDefs=[
+  {key:'all',label:'All orders',cls:''},
+  {key:'placed',label:'Order placed',cls:''},
+  {key:'transit',label:'In transit',cls:''},
+  {key:'delivered',label:'Delivered',cls:''},
+  {key:'gred',label:"GR'd",cls:''},
+  {key:'gr3',label:'GR over 3 days',cls:'warn'},
+  {key:'gr7',label:'GR over 7 days',cls:'danger'},
+];
+
+function getViewRows(orders){
+  const pending=orders.filter(o=>isPendingGR(o));
+  return ({
+    all:orders,
+    placed:orders.filter(o=>o.status==='order placed'),
+    transit:orders.filter(o=>['in transit','shipped'].includes(o.status)),
+    delivered:orders.filter(o=>o.status==='delivered'),
+    gred:orders.filter(o=>o.status==='received'||grDone.has(o.po)),
+    gr3:pending.filter(o=>daysSince(o.eta)>=3),
+    gr7:pending.filter(o=>daysSince(o.eta)>=7),
+  })[activeView]||[];
+}
+
+const viewLabels={all:'All orders',placed:'Order placed',transit:'Orders in transit',delivered:'Delivered — pending GR',gred:'GR completed',gr3:'Pending GR over 3 days',gr7:'Pending GR over 7 days'};
+const showGRViews=new Set(['all','delivered','gr3','gr7']);
+
+function grCell(o,show){
+  if(!show) return `<td style="color:var(--text3)">—</td>`;
+  if(o.status==='received') return `<td style="color:var(--text3)">—</td>`;
+  if(grDone.has(o.po)) return `<td><span class="gr-done-tag">✓ done</span></td>`;
+  if(o.status==='delivered'){
+    if(wfOrder && o.po===wfOrder.po){
+      return `<td><button class="gr-btn" onclick="goToWorkflowGR(${o.po})">✓ Good receipt</button></td>`;
+    }
+    return `<td><button class="gr-btn" onclick="doGR(${o.po})">✓ Good receipt</button></td>`;
+  }
+  return `<td style="color:var(--text3)">—</td>`;
+}
+
+function poCell(o){
+  if(o._demo){
+    return `<td><span class="demo-po-link" onclick="goBackToWorkflow()" title="Click to return to workflow">${o.po} ↩</span></td>`;
+  }
+  return `<td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent)">${o.po}</td>`;
+}
+
+function renderRow(o,showGR){
+  const hl=rowHL(o);
+  const d=isPendingGR(o)?daysSince(o.eta):0;
+  const tag=d>=7?`<span class="overdue-tag overdue-7">+${d}d</span>`:d>=3?`<span class="overdue-tag overdue-3">+${d}d</span>`:'';
+  return `<tr class="${hl}">
+    ${poCell(o)}
+    <td>${o.loc}</td><td title="${o.proj}">${o.proj}</td>
+    <td style="color:var(--text3)">${o.cur}</td>
+    <td class="amt-cell">${fmtAmt(o)}</td>
+    <td style="font-size:11px">${o.eta}${tag}</td>
+    <td>${badge(o.status)}</td>
+    <td class="track-cell">${o.track||'—'}</td>
+    <td>${o.vendor}</td>
+    ${grCell(o,showGR)}
+  </tr>`;
+}
+
+function renderKPIs(orders){
+  const s=computeStats(orders);
+  document.getElementById('kpiGrid').innerHTML=kpiDefs.map(d=>`
+    <div class="kpi ${d.cls}${activeView===d.key?' active':''}" onclick="setView('${d.key}')">
+      <div class="kpi-label">${d.label}</div>
+      <div class="kpi-value">${s[d.key]}</div>
+    </div>`).join('');
+  document.getElementById('nb-all').textContent=orders.length;
+  document.getElementById('nb-gr3').textContent=s.gr3;
+  document.getElementById('nb-gr7').textContent=s.gr7;
+}
+
+function renderBarChart(orders){
+  const byLoc={};
+  orders.forEach(o=>{ byLoc[o.loc]=(byLoc[o.loc]||0)+(parseFloat(o.amt)||0); });
+  const sorted=Object.entries(byLoc).sort((a,b)=>b[1]-a[1]);
+  const max=sorted[0]?.[1]||1;
+  const clrs=['#4f8ef7','#3ecf8e','#a78bfa','#f5a623','#f55353','#2dd4bf','#f97316','#ec4899'];
+  document.getElementById('barChart').innerHTML=sorted.map(([loc,val],i)=>`
+    <div class="bar-row"><span class="bar-name">${loc}</span>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/max*100)}%;background:${clrs[i%clrs.length]}"></div></div>
+    <span class="bar-val">${val>=1000?(val/1000).toFixed(0)+'k':val}</span></div>`).join('');
+}
+
+function renderDonut(orders){
+  const groups={'Order placed':orders.filter(o=>o.status==='order placed').length,'In transit':orders.filter(o=>['in transit','shipped'].includes(o.status)).length,'Delivered':orders.filter(o=>o.status==='delivered').length,"Complete/GR'd":orders.filter(o=>['complete','received'].includes(o.status)||grDone.has(o.po)).length,'Processed':orders.filter(o=>o.status==='processed').length};
+  const clrs=['#525c6e','#a78bfa','#4f8ef7','#3ecf8e','#f5a623'];
+  const entries=Object.entries(groups).filter(([,v])=>v>0);
+  const total=entries.reduce((s,[,v])=>s+v,0)||1;
+  const canvas=document.getElementById('donutCanvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,100,100);
+  let angle=-Math.PI/2;
+  entries.forEach(([,val],i)=>{ const sl=(val/total)*Math.PI*2; ctx.beginPath(); ctx.moveTo(50,50); ctx.arc(50,50,44,angle,angle+sl); ctx.closePath(); ctx.fillStyle=clrs[i%clrs.length]; ctx.fill(); angle+=sl; });
+  ctx.beginPath(); ctx.arc(50,50,27,0,Math.PI*2); ctx.fillStyle='#13161e'; ctx.fill();
+  ctx.fillStyle='#e8eaf0'; ctx.font='700 12px Syne,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(total,50,50);
+  document.getElementById('donutLegend').innerHTML=entries.map(([name,val],i)=>`<div class="legend-item"><span class="legend-dot" style="background:${clrs[i%clrs.length]}"></span><span class="legend-name">${name}</span><span class="legend-pct">${val}</span></div>`).join('');
+}
+
+function renderDashTable(orders){
+  const rows=getViewRows(orders);
+  const showGR=showGRViews.has(activeView);
+  document.getElementById('dashTableTitle').textContent=viewLabels[activeView]||'';
+  document.getElementById('dashTableCount').textContent=rows.length+' orders';
+  const tbody=document.getElementById('dashTbody');
+  // Highlight demo order row
+  if(wfOrder&&wfOrder.po){ const demoRow=rows.find(o=>o.po===wfOrder.po); if(demoRow) demoRow._demo=true; }
+  tbody.innerHTML=rows.length?rows.map(o=>renderRow(o,showGR)).join(''):`<tr><td colspan="10" class="no-rows">No orders in this category</td></tr>`;
+}
+
+function renderDashboard(){
+  const orders=filteredOrders();
+  renderKPIs(orders);
+  renderBarChart(orders);
+  renderDonut(orders);
+  renderDashTable(orders);
+}
+
+function renderListTable(){
+  const orders=filteredOrders();
+  const q=(document.getElementById('search2').value||'').toLowerCase();
+  const sf=document.getElementById('statusFilter').value;
+  let rows=orders.filter(o=>{
+    const mq=!q||String(o.po).includes(q)||o.proj.toLowerCase().includes(q)||o.vendor.toLowerCase().includes(q)||String(o.track).includes(q);
+    const ms=!sf||o.status===sf;
+    return mq&&ms;
+  });
+  if(sortKey){ rows.sort((a,b)=>{ let av=a[sortKey],bv=b[sortKey]; if(sortKey==='eta'){av=new Date(av);bv=new Date(bv);} return(av<bv?-1:av>bv?1:0)*sortDir; }); }
+  document.getElementById('listTableTitle').textContent=activeView!=='gr3'&&activeView!=='gr7'?'All orders':viewLabels[activeView];
+  document.getElementById('listTableCount').textContent=rows.length+' orders';
+  // Mark demo
+  if(wfOrder&&wfOrder.po){ const dr=rows.find(o=>o.po===wfOrder.po); if(dr) dr._demo=true; }
+  document.getElementById('listTbody').innerHTML=rows.length?rows.map(o=>renderRow(o,true)).join(''):`<tr><td colspan="10" class="no-rows">No orders match your filters</td></tr>`;
+  renderKPIs(orders);
+}
+
+function setView(key){ activeView=key; render(); }
+function doGR(po){ grDone.add(po); const o=getORDERS().find(x=>x.po===po); if(o){o.status='received'; const b=BASE_ORDERS.find(x=>x.po===po); if(b) b.status='received';} render(); }
+function sortBy(k){ if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=1;} renderListTable(); }
+
+function render(){
+  if(currentPage==='dashboard') renderDashboard();
+  else if(currentPage==='list') renderListTable();
+}
+
+// ── Page switching ──
+function injectTopbarControls(){
+  const tr=document.getElementById('topbar-right');
+  if(currentPage==='dashboard'||currentPage==='list'){
+    tr.innerHTML=`
+      <div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace">Location</span>
+        <select id="locFilter" onchange="render()" style="height:30px;font-size:11px"><option value="">All</option></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace">ETA range</span>
+        <select id="timeFilter" onchange="render()" style="height:30px;font-size:11px">
+          <option value="">All time</option><option value="30">Next 30 days</option><option value="60">Next 60 days</option><option value="90">Next 90 days</option>
+        </select>
+      </div>`;
+    const locs=[...new Set(BASE_ORDERS.map(o=>o.loc))].sort();
+    const sel=document.getElementById('locFilter');
+    locs.forEach(l=>{ const op=document.createElement('option'); op.value=l; op.textContent=l; sel.appendChild(op); });
+  } else if(currentPage==='workflow'){
+    tr.innerHTML=`<button class="btn btn-ghost" onclick="resetDemo()">↺ Reset demo</button>`;
+  }
+}
+
+function switchPage(page, opts={}){
+  currentPage=page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  const navEl=document.getElementById('nav-'+page);
+  if(navEl) navEl.classList.add('active');
+  document.getElementById('topbar-title').textContent=page==='dashboard'?'Dashboard overview':page==='list'?'All orders':'PO workflow';
+  document.getElementById('topbar-sub').textContent=page==='workflow'?(wfOrder?`PO ${wfOrder.po} · Stage ${currentStage+1} of 7`:'Create a new order'):'All locations · All time';
+  injectTopbarControls();
+  document.getElementById('wf-sidebar-section').style.display=page==='workflow'?'block':'none';
+  if(page==='dashboard') renderDashboard();
+  else if(page==='list') renderListTable();
+  if(opts.scrollToDemoOrder && wfOrder){ setTimeout(()=>{ const rows=document.querySelectorAll('#dashTbody tr, #listTbody tr'); rows.forEach(r=>{ if(r.classList.contains('row-demo')){ r.scrollIntoView({behavior:'smooth',block:'center'}); r.style.outline='2px solid var(--coral)'; setTimeout(()=>r.style.outline='',2000); } }); },200); }
+}
+
+function goBackToWorkflow(){
+  switchPage('workflow');
+  toast(`Returned to PO ${wfOrder.po} — stage ${currentStage+1}`);
+}
+
+function goToWorkflowGR(po){
+  if(!wfOrder || wfOrder.po!==po) return;
+  switchPage('workflow');
+  goStage(5);
+  toast(`PO ${po} — complete Good Receipt to finish`);
+}
+
+// ── Workflow ──
+const WF_STAGES=[
+  {label:'Create PO',name:'order placed'},
+  {label:'Vendor accepts',name:'processed'},
+  {label:'Shipped',name:'shipped'},
+  {label:'In transit',name:'in transit'},
+  {label:'Delivered',name:'delivered'},
+  {label:'Good receipt',name:'received'},
+  {label:'Invoice',name:'complete'},
+];
+
+function updateWFSidebar(){
+  document.getElementById('wf-sidebar-section').style.display='block';
+  const chip=document.getElementById('po-chip-wrap');
+  if(wfOrder&&wfOrder.po){
+    chip.innerHTML=`<div class="po-chip"><div class="po-chip-po">PO ${wfOrder.po}</div><div class="po-chip-name">${wfOrder.project}</div><div class="po-chip-meta">${wfOrder.location} · ${(wfOrder.currency==='USD'?'$':wfOrder.currency==='EUR'?'€':'¥')+(wfOrder.amount||0).toLocaleString()}</div></div>`;
+  } else chip.innerHTML='';
+  document.getElementById('wf-steps-nav').innerHTML=WF_STAGES.map((s,i)=>`
+    <div class="wf-step ${i<currentStage?'wf-done':i===currentStage?'wf-active':''}" onclick="goStage(${i})">
+      <div class="wf-step-num">${i<currentStage?'✓':(i+1)}</div>
+      <div class="wf-step-name">${s.label}</div>
+    </div>`).join('');
+}
+
+function updateWFPipeline(){
+  document.querySelectorAll('.pipe-step').forEach((el,i)=>{ el.classList.remove('active','done'); if(i<currentStage) el.classList.add('done'); else if(i===currentStage) el.classList.add('active'); });
+}
+
+const sbMap={'order placed':'sb-placed','processed':'sb-processed','shipped':'sb-shipped','in transit':'sb-transit','delivered':'sb-delivered','received':'sb-received','complete':'sb-complete'};
+
+function renderPOSummary(id){
+  const el=document.getElementById(id); if(!el||!wfOrder) return;
+  const trackHtml=wfOrder.tracking?`<div class="info-field"><div class="info-lbl">Tracking #</div><div class="info-val"><a class="track-link" href="${(CARRIER_URLS[wfOrder.carrier]||'https://google.com/search?q=')+wfOrder.tracking}" target="_blank"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> ${wfOrder.tracking}</a></div></div>`:'';
+  el.innerHTML=`<div class="info-head"><div class="info-title">PO ${wfOrder.po} — ${wfOrder.project}</div><span class="sb ${sbMap[wfOrder.status]||'sb-placed'}"><span class="sb-dot"></span>${wfOrder.status}</span></div>
+    <div class="info-body"><div class="info-grid">
+      <div class="info-field"><div class="info-lbl">PO Number</div><div class="info-val mono accent">${wfOrder.po}</div></div>
+      <div class="info-field"><div class="info-lbl">Location</div><div class="info-val">${wfOrder.location}</div></div>
+      <div class="info-field"><div class="info-lbl">Vendor</div><div class="info-val">${wfOrder.vendor}</div></div>
+      <div class="info-field"><div class="info-lbl">Amount</div><div class="info-val">${(wfOrder.currency==='USD'?'$':wfOrder.currency==='EUR'?'€':'¥')+(wfOrder.amount||0).toLocaleString()}</div></div>
+      <div class="info-field"><div class="info-lbl">Due Date</div><div class="info-val mono">${fmtDate(wfOrder.eta)}</div></div>
+      ${trackHtml}
+    </div></div>`;
+}
+
+function goStage(n){
+  if(n>0&&!wfOrder) return;
+  document.querySelectorAll('.stage-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('stage-'+n).classList.add('active');
+  currentStage=n;
+  updateWFPipeline(); updateWFSidebar();
+  if(n>0) renderPOSummary('pos-'+n);
+  if(n===3) renderTransitPanel();
+  if(n===6) fillInvoice();
+  if(n===7){ renderFinalTimeline(); renderPOSummary('pos-7'); }
+  document.getElementById('topbar-sub').textContent=wfOrder?`PO ${wfOrder.po} · Stage ${n+1} of 7`:'Create a new order';
+}
+
+function renderTransitPanel(){
+  const tl=document.getElementById('track-link-display');
+  const tn=document.getElementById('track-num-display');
+  const cd=document.getElementById('carrier-display-name');
+  const td=document.getElementById('transit-due-display');
+  if(tl) tl.href=(CARRIER_URLS[wfOrder.carrier]||'https://google.com/search?q=')+encodeURIComponent(wfOrder.tracking||'');
+  if(tn) tn.textContent=wfOrder.tracking||'—';
+  if(cd) cd.textContent=(wfOrder.carrier||'').toUpperCase();
+  if(td) td.textContent=fmtDate(wfOrder.eta);
+  ticketRef=genTicket();
+  const tw=document.getElementById('inbound-ticket-wrap');
+  if(tw) tw.innerHTML=`<div class="task-card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="task-pill">OPEN</span><span class="task-title-text">Inbound receipt coordination — PO ${wfOrder.po}</span></div>
+    <div class="task-grid">
+      <div><div class="task-meta">Ticket ref</div><div style="font-size:11px;font-weight:500;font-family:'IBM Plex Mono',monospace;color:var(--text)">${ticketRef}</div></div>
+      <div><div class="task-meta">Carrier</div><div style="font-size:11px;font-weight:500;color:var(--text)">${(wfOrder.carrier||'').toUpperCase()}</div></div>
+      <div><div class="task-meta">Tracking</div><div style="font-size:11px;font-weight:500;font-family:'IBM Plex Mono',monospace;color:var(--text)">${wfOrder.tracking}</div></div>
+      <div><div class="task-meta">Due date</div><div style="font-size:11px;font-weight:500;color:var(--text)">${fmtDate(wfOrder.eta)}</div></div>
+      <div><div class="task-meta">Delivery site</div><div style="font-size:11px;font-weight:500;color:var(--text)">${wfOrder.location}</div></div>
+      <div><div class="task-meta">Assigned to</div><div style="font-size:11px;font-weight:500;color:var(--text)">Site team</div></div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text2)">${wfOrder.description}</div>
+  </div>`;
+}
+
+function shareTicket(){ toast(`Ticket ${ticketRef} shared with carrier via email`); }
+function copyTicket(){ navigator.clipboard.writeText(`Ref: ${ticketRef} | PO: ${wfOrder.po} | Track: ${wfOrder.tracking} | Due: ${fmtDate(wfOrder.eta)} | Site: ${wfOrder.location}`).catch(()=>{}); toast('Ticket reference copied'); }
+
+function placePO(){
+  const project=document.getElementById('f-project').value.trim();
+  const amount=document.getElementById('f-amount').value;
+  if(!project||!amount){ toast('Fill in all required fields'); return; }
+  wfOrder={po:genPO(),project,location:document.getElementById('f-location').value,vendor:document.getElementById('f-vendor').value,currency:document.getElementById('f-currency').value,amount:parseFloat(amount),eta:document.getElementById('f-eta').value,description:document.getElementById('f-desc').value,status:'order placed',log:[{stage:'order placed',label:'PO issued',date:document.getElementById('f-eta').value,note:"Due date is requester's requested delivery date"}]};
+  toast(`PO ${wfOrder.po} issued — visible in dashboard`);
+  goStage(1);
+}
+
+function acceptPO(){
+  const veta=document.getElementById('vendor-eta').value;
+  if(!veta){ toast('Enter vendor confirmed date'); return; }
+  wfOrder.status='processed'; wfOrder.eta=veta;
+  wfOrder.log.push({stage:'processed',label:'Vendor accepted PO',date:veta,note:"Due date updated to vendor's confirmed delivery date"});
+  toast('Vendor accepted — status: processed'); goStage(2);
+}
+
+function shipOrder(){
+  const track=document.getElementById('tracking-num').value.trim();
+  const ceta=document.getElementById('carrier-eta').value;
+  const carrier=document.getElementById('carrier-name').value;
+  if(!track||!ceta){ toast('Enter tracking number and due date'); return; }
+  wfOrder.status='in transit'; wfOrder.tracking=track; wfOrder.eta=ceta; wfOrder.carrier=carrier;
+  wfOrder.log.push({stage:'in transit',label:'Shipped — in transit',date:ceta,note:`Tracking: ${track} (${carrier.toUpperCase()}). Inbound ticket created.`});
+  toast('In transit — tracking live'); goStage(3);
+}
+
+function deliverOrder(){
+  const dd=document.getElementById('delivery-date').value;
+  if(!dd){ toast('Enter delivery date'); return; }
+  wfOrder.status='delivered'; wfOrder.eta=dd; wfOrder.deliveryDate=dd;
+  wfOrder.log.push({stage:'delivered',label:'Delivered to site',date:dd,note:'Good Receipt task created for site team'});
+  toast('Delivered — Good Receipt task created'); goStage(4);
+}
+
+function completeGR(){
+  const rd=document.getElementById('receipt-date').value;
+  const notes=document.getElementById('gr-notes').value;
+  wfOrder.status='received'; wfOrder.eta=rd; wfOrder.receiptDate=rd;
+  wfOrder.log.push({stage:'received',label:'Good Receipt completed',date:rd,note:notes||'All items verified. Invoice pending payment.'});
+  toast('Good Receipt done — invoice pending'); goStage(5);
+}
+
+function fillInvoice(){
+  if(!wfOrder) return;
+  document.getElementById('inv-desc').textContent=wfOrder.description||'—';
+  document.getElementById('inv-po').textContent=wfOrder.po;
+  document.getElementById('inv-vendor').textContent=wfOrder.vendor;
+  document.getElementById('inv-receipt').textContent=fmtDate(wfOrder.receiptDate);
+  document.getElementById('inv-total').textContent=(wfOrder.currency==='USD'?'$':wfOrder.currency==='EUR'?'€':'¥')+(wfOrder.amount||0).toLocaleString();
+}
+
+function payInvoice(){
+  wfOrder.status='complete';
+  wfOrder.log.push({stage:'complete',label:'Invoice paid',date:new Date().toISOString().split('T')[0],note:'Order fully closed.'});
+  toast('Invoice approved — order complete!'); goStage(7);
+}
+
+function renderFinalTimeline(){
+  const sc={'order placed':'var(--text3)','processed':'var(--amber)','shipped':'var(--teal)','in transit':'var(--teal)','delivered':'var(--purple)','received':'var(--green)','complete':'var(--green)'};
+  const el=document.getElementById('final-timeline'); if(!el||!wfOrder) return;
+  el.innerHTML=`<div class="timeline">${wfOrder.log.map((l,i)=>`
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-dot done" style="background:${sc[l.stage]||'var(--green)'};border-color:${sc[l.stage]||'var(--green)'}">✓</div>${i<wfOrder.log.length-1?'<div class="tl-line done"></div>':''}</div>
+      <div class="tl-right"><div class="tl-stage done">${l.stage.toUpperCase()}</div><div class="tl-title-text">${l.label}</div><div class="tl-desc">${l.note}</div><div class="tl-date">${fmtDate(l.date)}</div></div>
+    </div>`).join('')}</div>`;
+}
+
+function resetDemo(){
+  wfOrder=null; currentStage=0; ticketRef='';
+  ['gr1','gr2','gr3c','gr4'].forEach(id=>{ const el=document.getElementById(id); if(el) el.checked=false; });
+  const gn=document.getElementById('gr-notes'); if(gn) gn.value='';
+  document.getElementById('po-chip-wrap').innerHTML='';
+  document.querySelectorAll('.stage-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('stage-0').classList.add('active');
+  currentStage=0; updateWFPipeline(); updateWFSidebar();
+  toast('Demo reset'); goStage(0);
+}
+
+// ── Init ──
+switchPage('dashboard');
+</script>
+</body>
+</html>
