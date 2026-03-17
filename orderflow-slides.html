@@ -150,7 +150,6 @@ body {
   flex-direction: column;
   justify-content: center;
   padding: 70px 80px;
-  position: relative;
   overflow: hidden;
 }
 
@@ -622,26 +621,25 @@ body {
 /* ── S4: Solution overview ── */
 .s-solution {
   background: var(--sage-deep);
-  padding: 56px 64px;
+  padding: 32px 52px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  position: relative;
   overflow: hidden;
 }
 
 .solution-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 36px;
+  gap: 10px;
+  margin-top: 18px;
 }
 
 .sol-card {
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(132,177,121,.18);
-  border-radius: 12px;
-  padding: 22px 20px;
+  border-radius: 10px;
+  padding: 14px 16px;
   opacity: 0;
   transform: translateY(20px);
   transition: all .4s ease;
@@ -651,13 +649,14 @@ body {
 .sol-card:hover { background: rgba(255,255,255,.09); border-color: rgba(132,177,121,.35); }
 
 .sol-icon {
-  width: 36px; height: 36px;
+  width: 28px; height: 28px;
   background: rgba(132,177,121,.15);
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
   font-size: 16px;
 }
 
@@ -876,6 +875,7 @@ body {
   background: var(--cream);
   display: flex;
   overflow: hidden;
+  /* inherits position:absolute;inset:0 from .slide */
 }
 
 .esc-left {
@@ -932,11 +932,10 @@ body {
 /* ── S8: Summary ── */
 .s-summary {
   background: var(--sage-deep);
-  padding: 56px 64px;
+  padding: 44px 56px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  position: relative;
   overflow: hidden;
 }
 
@@ -973,7 +972,6 @@ body {
   flex-direction: column;
   text-align: center;
   padding: 60px;
-  position: relative;
   overflow: hidden;
 }
 
@@ -989,7 +987,7 @@ body {
   pointer-events: none;
 }
 
-.cta-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--sage); margin-bottom: 24px; position: relative; z-index: 2; opacity:0; transform:translateY(16px); transition: opacity .5s ease, transform .5s ease; }
+.cta-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--sage); margin-bottom: 24px; position: relative; z-index: 2; }
 
 .cta-h1 {
   font-family: 'Playfair Display', serif;
@@ -1000,7 +998,6 @@ body {
   margin-bottom: 20px;
   position: relative;
   z-index: 2;
-  opacity:0; transform:translateY(16px); transition: opacity .5s .1s ease, transform .5s .1s ease;
 }
 
 .cta-h1 em { color: var(--sage); font-style: italic; }
@@ -1014,7 +1011,6 @@ body {
   margin-bottom: 36px;
   position: relative;
   z-index: 2;
-  opacity:0; transform:translateY(16px); transition: opacity .5s .2s ease, transform .5s .2s ease;
 }
 
 .cta-buttons {
@@ -1022,7 +1018,6 @@ body {
   gap: 14px;
   position: relative;
   z-index: 2;
-  opacity:0; transform:translateY(16px); transition: opacity .5s .3s ease, transform .5s .3s ease;
 }
 
 .cta-btn {
@@ -1162,7 +1157,7 @@ kbd {
       <span class="edit-bar-label">✏ Edit mode</span>
       <span class="edit-hint">Click any text on the slide to edit it directly</span>
       <button class="edit-btn" onclick="copySlideText()">Copy slide text</button>
-      <button class="edit-btn save" onclick="saveEdits()">Save changes</button>
+      <button class="edit-btn save" onclick="saveEdits()">⬇ Save & download HTML</button>
       <button class="edit-btn close" onclick="toggleEditMode()">✕ Exit edit</button>
     </div>
     <a class="demo-pill" href="index.html" target="_blank">
@@ -1419,7 +1414,7 @@ kbd {
         <div>
           <div class="slide-eyebrow">The solution</div>
           <div class="slide-h2 light">One platform. Full visibility.<br>Zero manual coordination.</div>
-          <div class="slide-lead light" style="margin-top:8px">OrderFlow connects every step of the procurement chain — from PO creation to invoice payment — in a single, shared workspace.</div>
+          <div class="slide-lead light" style="margin-top:6px;font-size:13px">OrderFlow connects every step of the procurement chain — from PO creation to invoice payment — in a single, shared workspace.</div>
         </div>
         <div class="solution-grid" id="sol-grid">
           <div class="sol-card">
@@ -1625,12 +1620,12 @@ kbd {
 
       <!-- ═══ SLIDE 12: Summary ═══ -->
       <div class="slide s-summary" data-slide="11">
-        <div id="sum-header" style="opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease">
+        <div id="sum-header" style="transition:opacity .5s ease,transform .5s ease">
           <div class="slide-eyebrow">The transformation</div>
           <div class="slide-h2 light" style="margin-bottom:6px">"I could have a one-stop check and know who, what to ask — and the priority."</div>
           <div class="slide-lead light">Your team's words. OrderFlow makes it real across all 150 locations.</div>
         </div>
-        <div class="summary-grid" id="summary-grid" style="opacity:0;transition:opacity .1s">
+        <div class="summary-grid" id="summary-grid">
           <div class="sum-card">
             <div class="sum-problem">GR visibility</div>
             <div class="sum-before">DCO has no context when carrier shows up — GR done wrong yesterday</div>
@@ -1774,21 +1769,22 @@ function onSlideEnter(n){
   // Summary
   if(n===11){
     const sh=document.getElementById('sum-header');
-    if(sh){ sh.style.opacity='0'; sh.style.transform='translateY(16px)'; setTimeout(()=>{ sh.style.opacity='1'; sh.style.transform='translateY(0)'; },80); }
-    const sg=document.getElementById('summary-grid');
-    if(sg){ sg.style.opacity='1'; }
+    if(sh){ sh.style.opacity='0'; sh.style.transform='translateY(14px)'; sh.style.transition='opacity .5s ease,transform .5s ease'; setTimeout(()=>{ sh.style.opacity='1'; sh.style.transform='translateY(0)'; },80); }
     document.querySelectorAll('#summary-grid .sum-card').forEach((el,i)=>{
-      el.style.opacity='0'; el.style.transform='translateY(14px)';
-      setTimeout(()=>{ el.style.opacity='1'; el.style.transform='translateY(0)'; el.style.transition='opacity .4s ease, transform .4s ease'; },i*80+200);
+      el.style.opacity='0'; el.style.transform='translateY(12px)'; el.style.transition='opacity .4s ease, transform .4s ease';
+      setTimeout(()=>{ el.style.opacity='1'; el.style.transform='translateY(0)'; },i*75+220);
     });
   }
-  // CTA
+  // CTA — stagger in with class-based transitions
   if(n===12){
-    ['.cta-label','.cta-h1','.cta-sub','.cta-buttons'].forEach((sel,i)=>{
+    const ctaEls=['.cta-label','.cta-h1','.cta-sub','.cta-buttons'];
+    ctaEls.forEach(sel=>{
       const el=document.querySelector(sel);
-      if(el){ el.style.opacity='0'; el.style.transform='translateY(16px)';
-        setTimeout(()=>{ el.style.opacity='1'; el.style.transform='translateY(0)'; },i*120+100);
-      }
+      if(el){ el.style.opacity='0'; el.style.transform='translateY(14px)'; el.style.transition='opacity .5s ease, transform .5s ease'; }
+    });
+    ctaEls.forEach((sel,i)=>{
+      const el=document.querySelector(sel);
+      if(el) setTimeout(()=>{ el.style.opacity='1'; el.style.transform='translateY(0)'; }, i*130+80);
     });
   }
 }
@@ -1924,20 +1920,24 @@ function toggleEditMode(){
 }
 
 function saveEdits(){
-  // Collect all edited content into a JSON blob and trigger download
-  const edits = {};
+  // Turn off contenteditable before saving so the HTML is clean
   EDITABLE_SELECTORS.forEach(sel => {
-    document.querySelectorAll(sel).forEach((el,i) => {
-      const key = sel.replace('.','') + '_' + i;
-      edits[key] = el.innerHTML;
-    });
+    document.querySelectorAll(sel).forEach(el => { el.removeAttribute('contenteditable'); });
   });
-  const blob = new Blob([JSON.stringify(edits, null, 2)], {type:'application/json'});
+  // Serialize the full page HTML
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const blob = new Blob([html], {type: 'text/html'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'orderflow-slides-edits.json';
-  a.click(); URL.revokeObjectURL(url);
-  toast('Edits saved as JSON — keep this file to reload your changes');
+  a.href = url;
+  a.download = 'orderflow-slides.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  // Re-enable editing
+  EDITABLE_SELECTORS.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => { el.contentEditable = 'true'; });
+  });
+  toast('✓ Saved — orderflow-slides.html downloaded. Upload this file to GitHub.');
 }
 
 function copySlideText(){
