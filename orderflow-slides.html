@@ -1144,6 +1144,7 @@ kbd {
 .edit-mode-toggle:hover { color: var(--sage-light); border-color: rgba(132,177,121,0.5); }
 .edit-mode-toggle.active { background: rgba(132,177,121,0.12); color: var(--sage); border-color: var(--sage); }
 [contenteditable=true] { outline: 2px dashed rgba(132,177,121,0.5) !important; outline-offset: 2px; cursor: text; border-radius: 3px; }
+[data-no-edit] { cursor: not-allowed !important; opacity: 0.6; }
 [contenteditable=true]:focus { outline-color: var(--sage) !important; background: rgba(132,177,121,0.06) !important; }
 .edit-hint { font-size: 10px; font-family: 'DM Mono', monospace; color: rgba(132,177,121,0.45); }
 
@@ -1176,8 +1177,8 @@ kbd {
           <div class="title-meta-val">150 locations · 10 vendors · 2 carriers</div>
           <div class="title-meta-label" style="margin-top:10px">Core problem</div>
           <div class="title-meta-val">Delivered but not received. Invoices stuck.</div>
-          <div class="title-meta-label" style="margin-top:16px;color:rgba(132,177,121,0.6)">Built by</div>
-          <div class="title-meta-val" style="color:rgba(212,236,191,0.8)">Fangfang Wang · Mar 2026</div>
+          <div class="title-meta-label" style="margin-top:16px;color:rgba(132,177,121,0.6)" data-no-edit>Built by</div>
+          <div class="title-meta-val" style="color:rgba(212,236,191,0.8)" data-no-edit>Fangfang Wang · Mar 2026</div>
         </div>
       </div>
 
@@ -1683,7 +1684,7 @@ kbd {
 
   <div style="display:flex;justify-content:space-between;align-items:center;width:var(--slide-w);margin-top:2px">
     <div class="hotkeys"><kbd>←</kbd> <kbd>→</kbd> arrow keys to navigate · <kbd>Space</kbd> next</div>
-    <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(132,177,121,0.35);letter-spacing:.5px">Built by Fangfang Wang · Mar 2026</div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(132,177,121,0.35);letter-spacing:.5px" data-no-edit>Built by Fangfang Wang · Mar 2026</div>
   </div>
 </div>
 
@@ -1909,6 +1910,7 @@ function toggleEditMode(){
   btn.textContent = editMode ? '✕ Editing' : '✏ Edit';
   EDITABLE_SELECTORS.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
+      if(el.hasAttribute('data-no-edit')) return;
       el.contentEditable = editMode ? 'true' : 'false';
     });
   });
@@ -1922,7 +1924,10 @@ function toggleEditMode(){
 function saveEdits(){
   // Turn off contenteditable before saving so the HTML is clean
   EDITABLE_SELECTORS.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => { el.removeAttribute('contenteditable'); });
+    document.querySelectorAll(sel).forEach(el => {
+      if(el.hasAttribute('data-no-edit')) return;
+      el.removeAttribute('contenteditable');
+    });
   });
   // Serialize the full page HTML
   const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
@@ -1935,7 +1940,10 @@ function saveEdits(){
   URL.revokeObjectURL(url);
   // Re-enable editing
   EDITABLE_SELECTORS.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => { el.contentEditable = 'true'; });
+    document.querySelectorAll(sel).forEach(el => {
+      if(el.hasAttribute('data-no-edit')) return;
+      el.contentEditable = 'true';
+    });
   });
   toast('✓ Saved — orderflow-slides.html downloaded. Upload this file to GitHub.');
 }
